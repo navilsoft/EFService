@@ -218,6 +218,31 @@ namespace EFService
            return result;
        }
 
+        public string[] UpdateFCMTokenId(string userID,string companyID, string tokenID)
+        {
+            string[] result = new string[] { };
+            try
+            {
+                if (string.IsNullOrEmpty(userID))
+                    result = new string[] { "Error201", "CompanyID Required" };
+                if (string.IsNullOrEmpty(companyID))
+                    result = new string[] { "Error203", "companyID Required" };
+                if (string.IsNullOrEmpty(tokenID))
+                    result = new string[] { "Error204", "Tokenid Required" };
+
+                DataHelper objHelper = new DataHelper();
+                result = objHelper.UpdateFCMTokenid(userID,companyID,tokenID);
+
+
+            }
+            catch (Exception ex)
+            {
+                result = new string[] { "UpdateFCMTokenResult", ex.ToString() };
+
+            }
+            return result;
+        }
+
         //Default functionalities
         public string GetData(int value)
         {

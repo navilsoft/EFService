@@ -749,6 +749,42 @@ namespace EFService
             return result;
 
         }
+
+        public string[] UpdateFCMTokenid(string userID,string companyID, string tokenID)
+        {
+            string[] result = new string[] { "Error", "Not getting any output", };
+            
+            try
+            {
+                String companyDbString = PrivateMethods.GetCompanyDbString(companyID, "Master");
+                using (SqlConnection con = new SqlConnection(companyDbString))
+                {
+                    
+                    using (SqlCommand cmd = new SqlCommand("uspUpdateUserTokenId8Gems", con))
+                    {
+                        con.Open();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@userID", SqlDbType.NVarChar).Value = userID;
+                        cmd.Parameters.Add("@companyID", SqlDbType.NVarChar).Value = companyID;
+                        
+                        cmd.Parameters.Add("@tokenid", SqlDbType.NVarChar).Value = tokenID;
+                        cmd.ExecuteNonQuery();
+                        result = new string[] { "Success", "Successfully updated", };
+                    }
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                { result = new string[] { "Error05", ex.Message }; }
+            }
+            return result;
+
+        }
+
+
         public string[] SaveSignature1(string filename,string companyID, string base64string)
         {
             string[] result = new string[] { };

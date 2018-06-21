@@ -107,6 +107,14 @@ namespace EFService
 
         [OperationContract]
         [WebInvoke(Method = "GET",
+       // UriTemplate = "AuthenticateUser",
+       RequestFormat = WebMessageFormat.Json,
+       ResponseFormat = WebMessageFormat.Json,
+       BodyStyle = WebMessageBodyStyle.Wrapped)]
+        string[] UpdateFCMTokenId(string userID,string companyID, string tokenID);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET",
             // UriTemplate = "AuthenticateUser",
           RequestFormat = WebMessageFormat.Json,
           ResponseFormat = WebMessageFormat.Json,
