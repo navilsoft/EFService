@@ -125,8 +125,8 @@ namespace EFService
                 {
                     try
                     {
-                      //  using (SqlCommand cmd = new SqlCommand("uspGetSalesPriceForInventoryCode", con))
-                        using (SqlCommand cmd = new SqlCommand("uspGetSalesPriceFor8GEMS", con))
+                           using (SqlCommand cmd = new SqlCommand("uspGetSalesPriceForInventoryCode", con))
+                        //using (SqlCommand cmd = new SqlCommand("uspGetSalesPriceFor8GEMS", con))
                         {
                             using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
                             {
