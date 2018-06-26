@@ -41,6 +41,13 @@ namespace EFService
         BodyStyle = WebMessageBodyStyle.Wrapped)]
         List<ARDeliveryAddress> GetCustomerDeliveryAddress(string companyID, string customerCode);
 
+        [OperationContract]
+        [WebInvoke(Method = "GET",
+          // UriTemplate = "AuthenticateUser",
+          RequestFormat = WebMessageFormat.Json,
+          ResponseFormat = WebMessageFormat.Json,
+          BodyStyle = WebMessageBodyStyle.Wrapped)]
+        string[] AuthenticateUser8gems(string userID, string password, string companyID);
 
 
         [OperationContract]
@@ -106,7 +113,7 @@ namespace EFService
         string[]  UpdateAccountDetails(string userID, string companyID ,string userName,string mobileNo,string emailID,string password,string profilePicture);
 
         [OperationContract]
-        [WebInvoke(Method = "GET",
+        [WebInvoke(Method = "POST",
        // UriTemplate = "AuthenticateUser",
        RequestFormat = WebMessageFormat.Json,
        ResponseFormat = WebMessageFormat.Json,

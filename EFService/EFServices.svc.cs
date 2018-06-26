@@ -43,6 +43,26 @@ namespace EFService
             }
             return result;
          }
+
+
+        public string[] AuthenticateUser8gems(string userID, string password, string companyID)
+        {
+            string[] result = new string[] { };
+            try
+            {
+                DataHelper objHelper = new DataHelper();
+                result = objHelper.authenticateUser8gems(userID, password, companyID);
+            }
+            catch (Exception ex)
+            {
+                result = new string[] { "Error01", "", ex.ToString() };
+
+            }
+            return result;
+        }
+
+
+
         public string[] CreateARSalesOrder(String companyID, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails)
         {
             string[] result = new string[] { };

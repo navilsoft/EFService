@@ -201,31 +201,6 @@ namespace EFService
                                         cmd.CommandType = CommandType.StoredProcedure;
 
 
-
-                                       
-   
-    
-   
-  
-   
-  
-   
-   
- 
-    
-  
-   
-	
-   
-  
-  
-  
-  
-   
-  
-
-
-
                                         cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar, 16).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.InvoiceNo) ? objARSalesOrderHeader.InvoiceNo : "0");
                                         cmd.Parameters.Add("@InvoiceDate", SqlDbType.DateTime).Value = Convert.ToDateTime(objARSalesOrderHeader.InvoiceDate);    //Convert.ToDateTime(DateTime.Now);  //(!string.IsNullOrEmpty(objARSalesOrderHeader.InvoiceDate) ? DateTime.ParseExact(objARSalesOrderHeader.InvoiceDate, "dd-MM-yyyy", CultureInfo.InvariantCulture) : System.DateTime.Now.Date);
                                         cmd.Parameters.Add("@CustomerID", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CustomerID) ? objARSalesOrderHeader.CustomerID : string.Empty);
@@ -548,6 +523,29 @@ namespace EFService
                 }
             return result;
         }
+
+        public string[] authenticateUser8gems(string userID, string password, string companyID)
+        {
+            password = EncryptDecrypt.Encrypt(password);
+            string[] result = new string[] { "Error", MessageHeader, "Not getting any output", };
+            try
+            {
+                List<SqlParameter> sp = new List<SqlParameter>()
+                        {
+                        new SqlParameter() {ParameterName = "@UserID", SqlDbType = SqlDbType.NVarChar, Value=userID},
+                        new SqlParameter() {ParameterName = "@Password", SqlDbType = SqlDbType.NVarChar, Value = password},
+                        new SqlParameter() {ParameterName = "@CompanyID", SqlDbType = SqlDbType.NVarChar, Value = companyID},
+                        };
+                SQLExecution objExecution = new SQLExecution(companyID, "Master");
+                result = objExecution.RunSP_ReturnStringArray("uspAuthenticateUser8gems", sp);
+            }
+            catch (Exception ex)
+            {
+                { result = new string[] { "Error05", MessageHeader, ex.Message }; }
+            }
+            return result;
+        }
+
         public string[] DHForgetPassword(string userID, string mobileNo)
         {
             string[] result = new string[] { "Error",  "Not getting any output", };
