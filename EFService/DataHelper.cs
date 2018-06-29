@@ -127,6 +127,8 @@ namespace EFService
                                 strARSalesOrderDetailRefNo = (!string.IsNullOrEmpty(objARSalesOrderDetails[i].ARSalesOrderDetailRefNo) ? Convert.ToString(objARSalesOrderDetails[i].ARSalesOrderDetailRefNo) : "0");
                                 if (strARSalesOrderDetailRefNo != "0")
                                 {
+
+
                                     dtGetPriceAndInvTitle = PrivateMethods.GetSalesPriceAndInvTitleForInventoryCodeAcc(companyId, Convert.ToInt64(strARSalesOrderDetailRefNo), objARSalesOrderDetails[i].InventoryCode);
                                     if (dtGetPriceAndInvTitle != null && dtGetPriceAndInvTitle.Rows.Count > 0)
                                     {
@@ -259,7 +261,8 @@ namespace EFService
             }
             catch (Exception exec)
             {
-                result = new string[] { "Error05", exec.ToString() }; }
+                result = new string[] { "Error05", exec.ToString() };
+            }
             return result;
         }
         public List<ARSalesOrder> GetSalesOrderDetails(string companyId, string strInvoiceNo)
@@ -502,6 +505,65 @@ namespace EFService
             }
             return lstDeliveryAddress;
         }
+       
+        public string[] AddToCustomerDeliveryAddress( string companyID, ARDeliveryAddressAll objCustomerAddressInfo)
+        {
+            String strReturnMsgSP = string.Empty;
+            string[] result = new string[] { "Error", "Not getting any output", };
+        
+            string conString = string.Empty;
+            String companyDbString = PrivateMethods.GetCompanyDbString(companyID, "Accounts");
+            SqlConnection sqlConnectionString = new SqlConnection(companyDbString);
+            ConnectionState state = sqlConnectionString.State;
+
+            try
+            {
+                if (state == ConnectionState.Open)
+                {
+                    sqlConnectionString.Close();
+                }
+
+                using (SqlCommand cmd = new SqlCommand("spFACustomerDeliveryAddressInsert8gemsEcom", sqlConnectionString))
+                {
+                            sqlConnectionString.Open();
+                            cmd.CommandType = CommandType.StoredProcedure;
+                   
+
+                    cmd.Parameters.Add("@CustomerID", SqlDbType.NVarChar, 50).Value = objCustomerAddressInfo.CustomerID;
+                    cmd.Parameters.Add("@CustomerName", SqlDbType.NVarChar, 100).Value = objCustomerAddressInfo.CustomerName;
+                    cmd.Parameters.Add("@BlockNo", SqlDbType.NVarChar, 5).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.BlockNo)?objCustomerAddressInfo.BlockNo:string.Empty);
+                    cmd.Parameters.Add("@FloorNo", SqlDbType.NVarChar, 3).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.FloorNo) ? objCustomerAddressInfo.FloorNo : string.Empty);
+                    cmd.Parameters.Add("@UnitNo", SqlDbType.NVarChar, 5).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.UnitNo) ? objCustomerAddressInfo.UnitNo : string.Empty);
+                    cmd.Parameters.Add("@StreetName", SqlDbType.NVarChar, 200).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.StreetName) ? objCustomerAddressInfo.StreetName : string.Empty);
+                    cmd.Parameters.Add("@BuildingName", SqlDbType.NVarChar, 100).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.BuildingName) ? objCustomerAddressInfo.BuildingName : string.Empty);
+                    cmd.Parameters.Add("@PostalCode", SqlDbType.NVarChar, 6).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.PostalCode) ? objCustomerAddressInfo.PostalCode : string.Empty);
+                    cmd.Parameters.Add("@CodeCountry", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.CodeCountry) ? objCustomerAddressInfo.CodeCountry : string.Empty);
+                    
+                    cmd.Parameters.Add("@CreatedUserID", SqlDbType.NVarChar,9).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.CreatedUserID) ? (objCustomerAddressInfo.CreatedUserID) : "System");
+                    cmd.Parameters.Add("@CreatedDateTime", SqlDbType.DateTime).Value = DateTime.Now;
+                    cmd.Parameters.Add("@ContactPerson", SqlDbType.VarChar,150).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.ContactPerson) ? objCustomerAddressInfo.ContactPerson : string.Empty);
+                    cmd.Parameters.Add("@ContactNo", SqlDbType.VarChar, 20).Value = (!string.IsNullOrEmpty(objCustomerAddressInfo.ContactNo) ? objCustomerAddressInfo.ContactNo : string.Empty);
+                    cmd.ExecuteNonQuery();
+                            strReturnMsgSP = "Success";
+                            result = new string[] { "Success", "Successfully updated", };
+                }
+                    }
+                catch(Exception exec)
+                {
+                result = new string[] { "Error05", exec.ToString() };
+             }
+            finally
+            {
+                state = sqlConnectionString.State;
+                if (state == ConnectionState.Open)
+                {
+                    sqlConnectionString.Close();
+                }
+
+            }
+            return result;
+        }
+
         public string[] authenticateUser(string userID, string password, string companyID)
         {
             password = EncryptDecrypt.Encrypt(password);

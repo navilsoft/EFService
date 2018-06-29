@@ -134,7 +134,30 @@ namespace EFService
             }
             return objLstDeliveryAddress;
         }
-        public  string[] ForgetPassword(string userID, string mobileNo)
+        public string[] AddToCustomerDeliveryAddress(string companyID, ARDeliveryAddressAll objCustomerAddressInfo)
+        {
+            string[] result = new string[] { };
+            try
+            {
+                if (string.IsNullOrEmpty(companyID))
+                    result = new string[] { "Error201", "CompanyID Required" };
+                
+                else if (objCustomerAddressInfo == null)
+                    result = new string[] { "Error202", "CustomerInfo should not be null" };
+               
+                DataHelper objHelper = new DataHelper();
+                result = objHelper.AddToCustomerDeliveryAddress(companyID,objCustomerAddressInfo);
+            }
+            catch (Exception ex)
+            {
+                result = new string[] { "Error01", ex.ToString() };
+
+            }
+            return result;
+
+        }
+
+        public string[] ForgetPassword(string userID, string mobileNo)
        {
            string[] result = new string[] { };
            try

@@ -93,8 +93,16 @@ namespace EFService
           RequestFormat = WebMessageFormat.Json,
           ResponseFormat = WebMessageFormat.Json,
           BodyStyle = WebMessageBodyStyle.Wrapped)]
-        string[] ForgetPassword(string userID, string mobileNo);
 
+        string[] ForgetPassword(string userID, string mobileNo);
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+          // UriTemplate = "AuthenticateUser",
+          RequestFormat = WebMessageFormat.Json,
+          ResponseFormat = WebMessageFormat.Json,
+          BodyStyle = WebMessageBodyStyle.Wrapped)]
+
+        string[] AddToCustomerDeliveryAddress(string companyID, ARDeliveryAddressAll objCustomerAddressInfo);
 
         [OperationContract]
         [WebInvoke(Method = "GET",
@@ -591,6 +599,56 @@ namespace EFService
         public string CustomerAddress { get { return customerAddress; } set { customerAddress = value; } }
         [DataMember]
         public string AddressID { get { return addressID; } set { addressID = value; } }
+    }
+    [DataContract]
+    public class ARDeliveryAddressAll
+    {
+     
+        public string customerID = string.Empty;
+        public string customerName = string.Empty;
+        public string blockNo = string.Empty;
+        public string contactPerson = string.Empty;
+      
+        public string floorNo = string.Empty;
+        public string unitNo = string.Empty;
+       
+        public string streetName = string.Empty;
+        public string buildingName = string.Empty;
+        public string postalCode = string.Empty;
+        //public string city = string.Empty;
+        public string codeCountry = string.Empty;
+        public string createdUserId = string.Empty;
+        public DateTime createdDateTime;
+        public string contactNo = string.Empty;
+       
+        [DataMember]
+        public string CustomerID { get { return customerID; } set { customerID = value; } }
+        [DataMember]
+        public string CustomerName { get { return customerName; } set { customerName = value; } }
+        [DataMember]
+        public string ContactPerson { get { return contactPerson; } set { contactPerson = value; } }
+        [DataMember]
+        public string BlockNo { get { return blockNo; } set { blockNo = value; } }
+        [DataMember]
+        public string UnitNo { get { return unitNo; } set { unitNo = value; } }
+        [DataMember]
+        public string FloorNo { get { return floorNo; } set { floorNo = value; } }
+        [DataMember]
+        public string StreetName { get { return streetName; } set { streetName = value; } }
+        [DataMember]
+        public string BuildingName { get { return buildingName; } set { buildingName = value; } }
+        [DataMember]
+        public string PostalCode { get { return postalCode; } set { postalCode = value; } }
+        [DataMember]
+        public string CodeCountry { get { return codeCountry; } set { codeCountry = value; } }
+        [DataMember]
+        public DateTime CreatedDateTime { get { return createdDateTime; } set { createdDateTime = value; } }
+        [DataMember]
+        public string CreatedUserID { get { return createdUserId; } set { createdUserId = value; } }
+        [DataMember]
+        public string ContactNo { get { return contactNo; } set { contactNo = value; } }
+
+
     }
 
 
