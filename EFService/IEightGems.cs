@@ -21,6 +21,14 @@ namespace EFService
         string[] CreateARSalesOrder(String companyID, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails);
 
         [OperationContract]
+        [WebInvoke(Method = "POST",
+      // UriTemplate = "CreateARSalesOrder",
+      RequestFormat = WebMessageFormat.Json,
+      ResponseFormat = WebMessageFormat.Json,
+      BodyStyle = WebMessageBodyStyle.Wrapped)]
+        string[] CreateARSalesOrderNew(String companyID, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails);
+
+        [OperationContract]
         [WebInvoke(Method = "GET",
         //UriTemplate = "GetSalesOrderDetails",
         ResponseFormat = WebMessageFormat.Json,

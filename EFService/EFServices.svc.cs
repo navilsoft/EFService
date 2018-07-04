@@ -85,6 +85,29 @@ namespace EFService
             }
             return result;
         }
+        public string[] CreateARSalesOrderNew(String companyID, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails)
+        {
+            string[] result = new string[] { };
+            try
+            {
+                if (string.IsNullOrEmpty(companyID))
+                    result = new string[] { "Error201", "CompanyID Required" };
+                else if (objARSalesOrderHeader == null)
+                    result = new string[] { "Error202", "SalesHeader should not be null" };
+                else if (objARSalesOrderDetails == null)
+                    result = new string[] { "Error203", "SalesHeader should not be null" };
+
+                DataHelper objHelper = new DataHelper();
+                result = objHelper.CreateSalesOrderNew(companyID, objARSalesOrderHeader, objARSalesOrderDetails);
+            }
+            catch (Exception ex)
+            {
+                result = new string[] { "Error01", ex.ToString() };
+
+            }
+            return result;
+        }
+
         public List<ARSalesOrder> GetSalesOrderDetails(string companyID, string invoiceNo)
         {
             List<ARSalesOrder> objARSalesOrder = new List<ARSalesOrder>();

@@ -197,7 +197,8 @@ namespace EFService
                             {
                                 try
                                 {
-                                    using (SqlCommand cmd = new SqlCommand("uspFAARSalesOrderSave8GEMS", con))
+                                   // using (SqlCommand cmd = new SqlCommand("uspFAARSalesOrderSave8GEMS", con))
+                                   using (SqlCommand cmd = new SqlCommand("uspFAARSalesOrderSave8GEMSwithInvcode", con))
                                     {
                                         con.Open();
                                         cmd.CommandType = CommandType.StoredProcedure;
@@ -219,6 +220,256 @@ namespace EFService
                                         cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate);
                                         cmd.Parameters.Add("@AMorPM", SqlDbType.NChar, 2).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryPeriod ) ? objARSalesOrderHeader.DeliveryPeriod : "AM");
                                         cmd.Parameters.Add("@RemainderFlag", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.RemainderFlag ) ? objARSalesOrderHeader.RemainderFlag : "0" );
+                                        cmd.Parameters.Add("@AddressID", SqlDbType.NChar, 10).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryAddressID) ? objARSalesOrderHeader.DeliveryAddressID : "0");
+                                        if (objARSalesOrderHeader.DeliveryPeriod == "AM")
+                                        {
+                                            cmd.Parameters.Add("@FromTime", SqlDbType.NChar, 10).Value = "12:00";
+                                            cmd.Parameters.Add("@ToTime", SqlDbType.NChar, 10).Value = "11:59";
+                                        }
+                                        else
+                                        {
+                                            cmd.Parameters.Add("@FromTime", SqlDbType.NChar, 10).Value = "11:49";
+                                            cmd.Parameters.Add("@ToTime", SqlDbType.NChar, 10).Value = "12:00";
+                                        }
+                                        cmd.Parameters.Add("@GSTExclIncl", SqlDbType.NVarChar, 50).Value = (strGSTExclusive);
+                                        cmd.Parameters.AddWithValue("@UserDefineTable", dtARSID); // passing Datatable
+                                        cmd.Parameters.Add("@SalesOrderNo", SqlDbType.NVarChar, 160).Direction = ParameterDirection.Output;
+
+                                        cmd.ExecuteNonQuery();
+                                        strSalesOrderNo = (string)cmd.Parameters["@SalesOrderNo"].Value;
+                                        if (!string.IsNullOrEmpty(strSalesOrderNo))
+                                        { result = new string[] { "Success", strSalesOrderNo }; }
+                                        else
+                                        { result = new string[] { "Error03", "Insert Operation Failed" }; }
+                                    }
+                                }
+                                finally
+                                {
+                                    if (con.State == ConnectionState.Open)
+                                        con.Close();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            result = new string[] { "Connection String Is Null." };
+
+                        }
+                    }
+                    else
+                        result = new string[] { "Sales Invoice Detail Value Missing !" };
+                }
+            }
+            catch (Exception exec)
+            {
+                result = new string[] { "Error05", exec.ToString() };
+            }
+            return result;
+        }
+        public string[] CreateSalesOrderNew(string companyId, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails)
+        {
+            string[] result = new string[] { };
+            string strSalesOrderNo = string.Empty, strCustomerType = string.Empty;
+            bool bCheckValidate = true;
+            Dictionary<string, string> dicGetValues = new Dictionary<string, string>();
+            List<ARSalesDetail> lstARSalesDetail = new List<ARSalesDetail>();
+            DataTable dtGSTCodeTaxValues = new DataTable();
+            string strGSTRegistered = string.Empty, strGSTExclusive = string.Empty, strTaxCode = string.Empty, strARSalesOrderDetailRefNo = string.Empty;
+            decimal dPercentage = 0, dSalesPrice = 0, dQty = 0, dNetTotal = 0, dTaxTotal = 0, dGrossTotal = 0;
+
+            #region Decalre DataTable
+
+            DataTable dtARSID = new DataTable();
+            dtARSID.Clear();
+            dtARSID.Columns.Add("SalesOrderDetailRefNo", typeof(string));
+            dtARSID.Columns.Add("SalesLineNo", typeof(string));
+            dtARSID.Columns.Add("AccountCode", typeof(string));
+            dtARSID.Columns.Add("InventoryCode", typeof(string));
+            dtARSID.Columns.Add("Description", typeof(string));
+            dtARSID.Columns.Add("CodeUnitMeasure", typeof(string));
+            dtARSID.Columns.Add("Quantity", typeof(string));
+            dtARSID.Columns.Add("RequestQuantity", typeof(string));
+            dtARSID.Columns.Add("ReceivedQuantity", typeof(string));
+            dtARSID.Columns.Add("UnitPrice", typeof(string));
+            dtARSID.Columns.Add("NetTotal", typeof(string));
+            dtARSID.Columns.Add("TaxAmount", typeof(string));
+            dtARSID.Columns.Add("GrossTotal", typeof(string));
+            dtARSID.Columns.Add("TaxCode", typeof(string));
+            dtARSID.Columns.Add("ForeignNetTotal", typeof(string));
+            dtARSID.Columns.Add("ForeignTaxAmount", typeof(string));
+            dtARSID.Columns.Add("ForeignGrossTotal", typeof(string));
+            dtARSID.Columns.Add("Size", typeof(string));
+
+            #endregion
+
+            try
+            {
+                #region Validation Mandatory Fields
+
+                if (string.IsNullOrEmpty(objARSalesOrderHeader.InvoiceDate))
+                {
+                    bCheckValidate = false;
+                    result = new string[] { "Error", "Invoice Date Missing !" };
+
+                }
+                else if (string.IsNullOrEmpty(objARSalesOrderHeader.CustomerID))
+                {
+                    bCheckValidate = false;
+                    result = new string[] { "Error", "Customer ID Missing !" };
+                }
+
+                #endregion
+
+                if (bCheckValidate)
+                {
+                    if (objARSalesOrderDetails.Length > 0 && objARSalesOrderDetails[0] != null)
+                    {
+                        dtGSTCodeTaxValues = PrivateMethods.CheckGSTExculisveOrInclusive(companyId);
+                        strCustomerType = PrivateMethods.GetActiveCustomerType(companyId, objARSalesOrderHeader.CustomerID);
+
+                        if (dtGSTCodeTaxValues != null && dtGSTCodeTaxValues.Rows.Count > 0)
+                        {
+                            strGSTRegistered = (!string.IsNullOrEmpty(Convert.ToString(dtGSTCodeTaxValues.Rows[0]["GSTRegistered"])) ? Convert.ToString(dtGSTCodeTaxValues.Rows[0]["GSTRegistered"]) : "N");
+                            strGSTExclusive = (!string.IsNullOrEmpty(Convert.ToString(dtGSTCodeTaxValues.Rows[0]["GSTExclusive"])) ? Convert.ToString(dtGSTCodeTaxValues.Rows[0]["GSTExclusive"]) : "N");
+                            strTaxCode = (!string.IsNullOrEmpty(Convert.ToString(dtGSTCodeTaxValues.Rows[0]["Code"])) ? Convert.ToString(dtGSTCodeTaxValues.Rows[0]["Code"]) : "SR");
+                            dPercentage = (!string.IsNullOrEmpty(Convert.ToString(dtGSTCodeTaxValues.Rows[0]["Percentage"])) ? Convert.ToDecimal(dtGSTCodeTaxValues.Rows[0]["Percentage"].ToString()) : 7);
+                        }
+                        else
+                        {
+                            strTaxCode = "ZR";
+                        }
+                        for (int i = 0; i < objARSalesOrderDetails.Length; i++)
+                        {
+                            #region Validation Mandatory Fields - > Sales Order Details
+
+                            if (string.IsNullOrEmpty(objARSalesOrderDetails[i].InventoryCode))
+                            {
+                                bCheckValidate = false;
+                                result = new string[] { "Error", "SOD InventoryCode Missing !" };
+                            }
+                            else if (string.IsNullOrEmpty(objARSalesOrderDetails[i].Description))
+                            {
+                                bCheckValidate = false;
+                                result = new string[] { "Error", "SOD Description Missing !" };
+
+                            }
+                            else if (string.IsNullOrEmpty(objARSalesOrderDetails[i].Quantity))
+                            {
+                                bCheckValidate = false;
+                                result = new string[] { "Error", "SOD Quantity Missing !" };
+                            }
+                            else if (string.IsNullOrEmpty(objARSalesOrderDetails[i].Size))
+                            {
+                                bCheckValidate = false;
+                                result = new string[] { "Error", "SOD Size Missing !" };
+                            }
+
+                            #endregion
+
+                            if (bCheckValidate)
+                            {
+                                #region NetTotal - TaxTotal - GrossTotal --> Calculations
+
+                                DataTable dtGetPriceAndInvTitle = new DataTable();
+                                string strInvTitle = string.Empty, strCodeUnitMeasure = string.Empty;
+                                dSalesPrice = 0; dQty = 0; dNetTotal = 0; dTaxTotal = 0; dGrossTotal = 0;
+
+                                strARSalesOrderDetailRefNo = (!string.IsNullOrEmpty(objARSalesOrderDetails[i].ARSalesOrderDetailRefNo) ? Convert.ToString(objARSalesOrderDetails[i].ARSalesOrderDetailRefNo) : "0");
+                                if (strARSalesOrderDetailRefNo != "0")
+                                {
+
+
+                                    dtGetPriceAndInvTitle = PrivateMethods.GetSalesPriceAndInvTitleForInventoryCodeAcc(companyId, Convert.ToInt64(strARSalesOrderDetailRefNo), objARSalesOrderDetails[i].InventoryCode);
+                                    if (dtGetPriceAndInvTitle != null && dtGetPriceAndInvTitle.Rows.Count > 0)
+                                    {
+                                        dSalesPrice = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["UnitPrice"])) ? Convert.ToDecimal(dtGetPriceAndInvTitle.Rows[0]["UnitPrice"].ToString()) : 0);
+                                        strInvTitle = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["InventoryTitle"])) ? Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["InventoryTitle"]) : string.Empty);
+                                        strCodeUnitMeasure = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["CodeUnitMeasure"])) ? Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["CodeUnitMeasure"]) : string.Empty);
+                                    }
+                                    dQty = (!string.IsNullOrEmpty(objARSalesOrderDetails[i].ReceivedQuantity) ? Convert.ToDecimal(objARSalesOrderDetails[i].ReceivedQuantity) : 0);
+                                }
+                                else if (strARSalesOrderDetailRefNo.Equals("0"))
+                                {
+                                    dtGetPriceAndInvTitle = PrivateMethods.GetSalesPriceAndInvTitleForInventoryCode(companyId, objARSalesOrderDetails[i].InventoryCode, strCustomerType);
+                                    if (dtGetPriceAndInvTitle != null && dtGetPriceAndInvTitle.Rows.Count > 0)
+                                    {
+                                        dSalesPrice = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["SalesPrice"])) ? Convert.ToDecimal(dtGetPriceAndInvTitle.Rows[0]["SalesPrice"].ToString()) : 0);
+                                        strInvTitle = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["InventoryTitle"])) ? Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["InventoryTitle"]) : string.Empty);
+                                        strCodeUnitMeasure = (!string.IsNullOrEmpty(Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["CodeUnitMeasure"])) ? Convert.ToString(dtGetPriceAndInvTitle.Rows[0]["CodeUnitMeasure"]) : string.Empty);
+                                    }
+                                    dQty = (!string.IsNullOrEmpty(objARSalesOrderDetails[i].Quantity) ? Convert.ToDecimal(objARSalesOrderDetails[i].Quantity) : 0);
+                                }
+
+                                if (!string.IsNullOrEmpty(strGSTRegistered))
+                                {
+                                    if (strGSTRegistered.Equals("Y"))
+                                    {
+                                        if (strGSTExclusive.Equals("Y"))
+                                        {
+                                            dNetTotal = ((dQty) * (dSalesPrice));
+                                            dTaxTotal = (dNetTotal * dPercentage / 100);
+                                            dGrossTotal = (dNetTotal + dTaxTotal);
+                                        }
+                                        else if (strGSTExclusive.Equals("N"))
+                                        {
+                                            dGrossTotal = ((dQty) * (dSalesPrice));
+                                            dNetTotal = (dGrossTotal / ((100 + dPercentage) / 100));
+                                            dTaxTotal = (dGrossTotal - dNetTotal);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    dNetTotal = ((dQty) * (dSalesPrice));
+                                    dTaxTotal = 0;
+                                    dGrossTotal = (dNetTotal + dTaxTotal);
+                                }
+
+                                #endregion
+                                dtARSID.Rows.Add(new object[]
+                                   {
+                                    strARSalesOrderDetailRefNo,
+                                    i+1,(!string.IsNullOrEmpty(objARSalesOrderDetails[i].AccountCode) ? objARSalesOrderDetails[i].AccountCode : "Sales"),
+                                    objARSalesOrderDetails[i].InventoryCode, strInvTitle, strCodeUnitMeasure, //objARSalesOrderDetails[i].Description
+                                    dQty, dQty, (!string.IsNullOrEmpty(objARSalesOrderDetails[i].ReceivedQuantity) ? objARSalesOrderDetails[i].ReceivedQuantity : "0"),
+                                    dSalesPrice, dNetTotal,dTaxTotal, dGrossTotal,strTaxCode,
+                                    dNetTotal,dTaxTotal, dGrossTotal,objARSalesOrderDetails[i].Size                            
+                                    //Math.Round(dSalesPrice,4), Math.Round(dNetTotal,2),Math.Round(dTaxTotal,2), Math.Round(dGrossTotal,2),strTaxCode,
+                                    //Math.Round(dNetTotal,2),Math.Round(dTaxTotal,2), Math.Round(dGrossTotal,2)                                  
+                                   });
+                            }
+                        }
+
+                        String companyDbString = PrivateMethods.GetCompanyDbString(companyId, "Accounts");
+                        if (!string.IsNullOrEmpty(companyDbString))
+                        {
+                            using (SqlConnection con = new SqlConnection(companyDbString))
+                            {
+                                try
+                                {
+                                    //using (SqlCommand cmd = new SqlCommand("uspFAARSalesOrderSave8GEMS", con))
+                                    using (SqlCommand cmd = new SqlCommand("uspFAARSalesOrderSave8GEMSwithInvcode", con))
+                                    {
+                                        con.Open();
+                                        cmd.CommandType = CommandType.StoredProcedure;
+
+
+                                        cmd.Parameters.Add("@InvoiceNo", SqlDbType.NVarChar, 16).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.InvoiceNo) ? objARSalesOrderHeader.InvoiceNo : "0");
+                                        cmd.Parameters.Add("@InvoiceDate", SqlDbType.DateTime).Value = Convert.ToDateTime(objARSalesOrderHeader.InvoiceDate);    //Convert.ToDateTime(DateTime.Now);  //(!string.IsNullOrEmpty(objARSalesOrderHeader.InvoiceDate) ? DateTime.ParseExact(objARSalesOrderHeader.InvoiceDate, "dd-MM-yyyy", CultureInfo.InvariantCulture) : System.DateTime.Now.Date);
+                                        cmd.Parameters.Add("@CustomerID", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CustomerID) ? objARSalesOrderHeader.CustomerID : string.Empty);
+                                        cmd.Parameters.Add("@CodeSalesType", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CodeSalesType) ? objARSalesOrderHeader.CodeSalesType : "Credit Sales");
+                                        cmd.Parameters.Add("@Remarks", SqlDbType.NVarChar, 800).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.Remarks) ? objARSalesOrderHeader.Remarks : string.Empty);
+                                        cmd.Parameters.Add("@OurRefNo", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.OurRefNo) ? objARSalesOrderHeader.OurRefNo : string.Empty);
+                                        cmd.Parameters.Add("@YourRefNo", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.YourRefNo) ? objARSalesOrderHeader.YourRefNo : string.Empty);
+                                        cmd.Parameters.Add("@UserID", SqlDbType.NVarChar, 9).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CreatedUserID) ? (objARSalesOrderHeader.CreatedUserID) : "System");
+                                        cmd.Parameters.Add("@CodeLocation", SqlDbType.NVarChar, 20).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CodeLocation) ? objARSalesOrderHeader.CodeLocation : "1");  // Default Code Location Passed "1"                                                      
+                                        cmd.Parameters.Add("@CurrencyCode", SqlDbType.NVarChar, 10).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.CurrencyCode) ? (objARSalesOrderHeader.CurrencyCode) : "SGD");
+                                        cmd.Parameters.Add("@ExchangeRate", SqlDbType.Decimal).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ExchangeRate) ? objARSalesOrderHeader.ExchangeRate : "1.00");
+                                        cmd.Parameters.Add("@ProjectName", SqlDbType.NVarChar, 150).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ProjectName) ? objARSalesOrderHeader.ProjectName : "Select");
+                                        cmd.Parameters.Add("@InventoryType", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.InventoryType) ? objARSalesOrderHeader.InventoryType : "Y");
+                                        cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate);
+                                        cmd.Parameters.Add("@AMorPM", SqlDbType.NChar, 2).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryPeriod) ? objARSalesOrderHeader.DeliveryPeriod : "AM");
+                                        cmd.Parameters.Add("@RemainderFlag", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.RemainderFlag) ? objARSalesOrderHeader.RemainderFlag : "0");
                                         cmd.Parameters.Add("@AddressID", SqlDbType.NChar, 10).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryAddressID) ? objARSalesOrderHeader.DeliveryAddressID : "0");
                                         if (objARSalesOrderHeader.DeliveryPeriod == "AM")
                                         {
