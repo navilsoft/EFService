@@ -217,7 +217,7 @@ namespace EFService
                                         cmd.Parameters.Add("@ExchangeRate", SqlDbType.Decimal).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ExchangeRate) ? objARSalesOrderHeader.ExchangeRate : "1.00");
                                         cmd.Parameters.Add("@ProjectName", SqlDbType.NVarChar, 150).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ProjectName) ? objARSalesOrderHeader.ProjectName : "Select");
                                         cmd.Parameters.Add("@InventoryType", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.InventoryType) ? objARSalesOrderHeader.InventoryType : "Y");
-                                        cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate);
+                                        cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate).ToShortDateString();
                                         cmd.Parameters.Add("@AMorPM", SqlDbType.NChar, 2).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryPeriod ) ? objARSalesOrderHeader.DeliveryPeriod : "AM");
                                         cmd.Parameters.Add("@RemainderFlag", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.RemainderFlag ) ? objARSalesOrderHeader.RemainderFlag : "0" );
                                         cmd.Parameters.Add("@AddressID", SqlDbType.NChar, 10).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryAddressID) ? objARSalesOrderHeader.DeliveryAddressID : "0");
@@ -561,7 +561,17 @@ namespace EFService
                                                     aRSalesOrder.GrossTotal = dr["GrossTotal"].ToString();
                                                     aRSalesOrder.DeliveryDate  = dr["DeliveryDate"].ToString();
                                                     aRSalesOrder.DeliveryPeriod  = dr["DeliveryPeriod"].ToString();
-                                                    aRSalesOrder.RemainderFlag  = dr["RemainderFlag"].ToString();
+                                                    string remainder= dr["RemainderFlag"].ToString();
+                                                    if (remainder=="false")
+                                                    {
+                                                        aRSalesOrder.RemainderFlag = "0";
+
+                                                    }
+                                                    else
+                                                    {
+                                                        aRSalesOrder.RemainderFlag = "1";
+                                                    }
+                                                   // aRSalesOrder.RemainderFlag  = dr["RemainderFlag"].ToString();
                                                     aRSalesOrder.Size = dr["Size"].ToString();
                                                     aRSalesOrder.DeliveryAddressID = dr["DeliveryAddressID"].ToString();
                                                     objARSalesOrder.Add(aRSalesOrder);

@@ -103,6 +103,7 @@ namespace EFService
           BodyStyle = WebMessageBodyStyle.Wrapped)]
 
         string[] ForgetPassword(string userID, string mobileNo);
+
         [OperationContract]
         [WebInvoke(Method = "POST",
           // UriTemplate = "AuthenticateUser",
