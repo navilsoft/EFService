@@ -257,7 +257,7 @@ namespace EFService
            return lstObjNotificationDetails;
 
        }
-       public   string[] UpdateAccountDetails(string userID, string companyID ,string userName,string mobileNo,string emailID,string password,string profilePicture)
+       public   string[] UpdateAccountDetails(string userID, string companyID ,string userName,string mobileNo,string emailID,string password,string profilePicture,string customerCode)
        {
            string[] result = new string[] { };
            try
@@ -272,7 +272,7 @@ namespace EFService
                    result = new string[] { "Error204", "Password Required" };
             
                DataHelper objHelper = new DataHelper();
-               result = objHelper.UpdateAccountDetails(userID, companyID, userName, mobileNo, emailID, password, profilePicture);
+               result = objHelper.UpdateAccountDetails(userID, companyID, userName, mobileNo, emailID, password, profilePicture,customerCode);
 
 
            }
@@ -290,7 +290,7 @@ namespace EFService
             try
             {
                 if (string.IsNullOrEmpty(userID))
-                    result = new string[] { "Error201", "CompanyID Required" };
+                    result = new string[] { "Error201", "UserID Required" };
                 if (string.IsNullOrEmpty(companyID))
                     result = new string[] { "Error203", "companyID Required" };
                 if (string.IsNullOrEmpty(tokenID))
@@ -304,6 +304,30 @@ namespace EFService
             catch (Exception ex)
             {
                 result = new string[] { "UpdateFCMTokenResult", ex.ToString() };
+
+            }
+            return result;
+        }
+        public string[] UpdateFCMTokenIdIOS(string userID, string companyID, string tokenID)
+        {
+            string[] result = new string[] { };
+            try
+            {
+                if (string.IsNullOrEmpty(userID))
+                    result = new string[] { "Error201", "UserID Required" };
+                if (string.IsNullOrEmpty(companyID))
+                    result = new string[] { "Error203", "companyID Required" };
+                if (string.IsNullOrEmpty(tokenID))
+                    result = new string[] { "Error204", "Tokenid Required" };
+
+                DataHelper objHelper = new DataHelper();
+                result = objHelper.UpdateFCMTokenidIOS(userID, companyID, tokenID);
+
+
+            }
+            catch (Exception ex)
+            {
+                result = new string[] { "UpdateFCMTokenIOSResult", ex.ToString() };
 
             }
             return result;

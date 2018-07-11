@@ -127,7 +127,7 @@ namespace EFService
           RequestFormat = WebMessageFormat.Json,
           ResponseFormat = WebMessageFormat.Json,
           BodyStyle = WebMessageBodyStyle.Wrapped)]
-        string[]  UpdateAccountDetails(string userID, string companyID ,string userName,string mobileNo,string emailID,string password,string profilePicture);
+        string[]  UpdateAccountDetails(string userID, string companyID ,string userName,string mobileNo,string emailID,string password,string profilePicture,string customerCode);
 
         [OperationContract]
         [WebInvoke(Method = "GET",
@@ -136,6 +136,15 @@ namespace EFService
        ResponseFormat = WebMessageFormat.Json,
        BodyStyle = WebMessageBodyStyle.Wrapped)]
         string[] UpdateFCMTokenId(string userID,string companyID, string tokenID);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET",
+      // UriTemplate = "AuthenticateUser",
+      RequestFormat = WebMessageFormat.Json,
+      ResponseFormat = WebMessageFormat.Json,
+      BodyStyle = WebMessageBodyStyle.Wrapped)]
+        string[] UpdateFCMTokenIdIOS(string userID, string companyID, string tokenID);
+
 
         [OperationContract]
         [WebInvoke(Method = "GET",

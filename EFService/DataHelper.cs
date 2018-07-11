@@ -1015,7 +1015,7 @@ namespace EFService
             return lstObjNotificationHeader;
 
         }
-        public string[] UpdateAccountDetails(string userID, string companyID,string userName,string mobileNo,string emailID,string password,string profilePicture)
+        public string[] UpdateAccountDetails(string userID, string companyID,string userName,string mobileNo,string emailID,string password,string profilePicture,string customerCode)
         {
             string[] result = new string[] { "Error", "Not getting any output", };
             //password = EncryptDecrypt.Encrypt(password);
@@ -1055,6 +1055,7 @@ namespace EFService
                         cmd.Parameters.Add("@companyID", SqlDbType.NVarChar).Value = companyID;
                         cmd.Parameters.Add("@url", SqlDbType.NVarChar).Value = fileLocation[1].ToString ();
                         cmd.Parameters.Add("@password", SqlDbType.NVarChar).Value = password;
+                        cmd.Parameters.Add("@customerCode", SqlDbType.NVarChar).Value = (!string.IsNullOrEmpty(customerCode) ? customerCode : "0"); ;
                         cmd.ExecuteNonQuery();
                          result = new string[] { "Success", "Successfully updated", };
                     }
@@ -1104,7 +1105,39 @@ namespace EFService
             return result;
 
         }
+        public string[] UpdateFCMTokenidIOS(string userID, string companyID, string tokenID)
+        {
+            string[] result = new string[] { "Error", "Not getting any output", };
 
+            try
+            {
+                String companyDbString = PrivateMethods.GetCompanyDbString(companyID, "Master");
+                using (SqlConnection con = new SqlConnection(companyDbString))
+                {
+
+                    using (SqlCommand cmd = new SqlCommand("uspUpdateUseriOSTokenId8Gems", con))
+                    {
+                        con.Open();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@userID", SqlDbType.NVarChar).Value = userID;
+                        cmd.Parameters.Add("@companyID", SqlDbType.NVarChar).Value = companyID;
+
+                        cmd.Parameters.Add("@tokenid", SqlDbType.NVarChar).Value = tokenID;
+                        cmd.ExecuteNonQuery();
+                        result = new string[] { "Success", "Successfully updated", };
+                    }
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                { result = new string[] { "Error05", ex.Message }; }
+            }
+            return result;
+
+        }
 
         public string[] SaveSignature1(string filename,string companyID, string base64string)
         {
