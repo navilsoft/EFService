@@ -217,7 +217,8 @@ namespace EFService
                                         cmd.Parameters.Add("@ExchangeRate", SqlDbType.Decimal).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ExchangeRate) ? objARSalesOrderHeader.ExchangeRate : "1.00");
                                         cmd.Parameters.Add("@ProjectName", SqlDbType.NVarChar, 150).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.ProjectName) ? objARSalesOrderHeader.ProjectName : "Select");
                                         cmd.Parameters.Add("@InventoryType", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.InventoryType) ? objARSalesOrderHeader.InventoryType : "Y");
-                                        cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate).ToShortDateString();
+                                        cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = Convert.ToDateTime(objARSalesOrderHeader.DeliveryDate);
+                                        //cmd.Parameters.Add("@DeliveryDate", SqlDbType.NChar, 20).Value = objARSalesOrderHeader.DeliveryDate;
                                         cmd.Parameters.Add("@AMorPM", SqlDbType.NChar, 2).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryPeriod ) ? objARSalesOrderHeader.DeliveryPeriod : "AM");
                                         cmd.Parameters.Add("@RemainderFlag", SqlDbType.NChar, 1).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.RemainderFlag ) ? objARSalesOrderHeader.RemainderFlag : "0" );
                                         cmd.Parameters.Add("@AddressID", SqlDbType.NChar, 10).Value = (!string.IsNullOrEmpty(objARSalesOrderHeader.DeliveryAddressID) ? objARSalesOrderHeader.DeliveryAddressID : "0");
@@ -525,6 +526,7 @@ namespace EFService
                 if (!string.IsNullOrEmpty(strInvoiceNo))
                 {
                     String companyDbString = PrivateMethods.GetCompanyDbString(companyId, "Accounts");
+                   /// String companyDbString = " Data Source = 35.185.186.225; Initial Catalog = ERPv2_ACC_8GEMS; Persist Security Info = true; User ID = sa; Password = Accountitpwd...";
                     if (!string.IsNullOrEmpty(companyDbString))
                     {
                         using (SqlConnection con = new SqlConnection(companyDbString))
@@ -559,7 +561,7 @@ namespace EFService
                                                     aRSalesOrder.NetTotal = dr["NetTotal"].ToString();
                                                     aRSalesOrder.TaxAmount = dr["TaxAmount"].ToString();
                                                     aRSalesOrder.GrossTotal = dr["GrossTotal"].ToString();
-                                                    aRSalesOrder.DeliveryDate  = dr["DeliveryDate"].ToString();
+                                                    aRSalesOrder.DeliveryDate  = dr["DeliveryDate"].ToString("dd/MM/YYYY");
                                                     aRSalesOrder.DeliveryPeriod  = dr["DeliveryPeriod"].ToString();
                                                     string remainder= dr["RemainderFlag"].ToString();
                                                     if (remainder=="false")
