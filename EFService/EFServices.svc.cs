@@ -85,6 +85,9 @@ namespace EFService
             }
             return result;
         }
+
+
+       
         public string[] CreateARSalesOrderNew(String companyID, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails)
         {
             string[] result = new string[] { };

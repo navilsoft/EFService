@@ -9,6 +9,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Web;
 using System.Web.Configuration;
+using System.Net.Mail;
+using System.Net;
 
 namespace EFService
 {
@@ -239,7 +241,11 @@ namespace EFService
                                         cmd.ExecuteNonQuery();
                                         strSalesOrderNo = (string)cmd.Parameters["@SalesOrderNo"].Value;
                                         if (!string.IsNullOrEmpty(strSalesOrderNo))
-                                        { result = new string[] { "Success", strSalesOrderNo }; }
+                                        {
+                                            result = new string[] { "Success", strSalesOrderNo };
+                                            GetSalesOrderDetailsByInvoicenoForEmail(companyId, strSalesOrderNo);
+                                            //sendingEmail(strSalesOrderNo, objARSalesOrderHeader.CustomerID, companyId);
+                                        }
                                         else
                                         { result = new string[] { "Error03", "Insert Operation Failed" }; }
                                     }
@@ -266,6 +272,79 @@ namespace EFService
                 result = new string[] { "Error05", exec.ToString() };
             }
             return result;
+        }
+
+        //sending email
+        public void sendingEmail(string SalesOrderNo,string CustomerID,string Companyid)
+        {
+            //string templatePath = string.Empty;
+            //string emailSubject = string.Empty;
+            //string strMessage = string.Empty;
+            //string StaffName = string.Empty;
+            //string ApprovalOfficerName = string.Empty;
+            //string ProjectName = string.Empty;
+            //DataTable dtInvoceInfo = GetSalesOrderDetailsByInvoicenoForEmail(SalesOrderNo, Companyid);
+            //string Invoicedate = Convert.ToString(dtInvoceInfo.Rows[0]["Invoicedate"]);
+            //string address = Convert.ToString(dtInvoceInfo.Rows[0]["Address"]);
+            //string customername = Convert.ToString(dtInvoceInfo.Rows[0]["customername"]);
+            //string Email = Convert.ToString(dtInvoceInfo.Rows[0]["email"]);
+            //string emailFrom = "admin@excelforte.com";
+            //string emailTo = Email;// "sivanandam@gmail.com";
+           
+            //emailSubject = "Sales Order- " + SalesOrderNo + "From Cusomter " + CustomerID;
+            //strMessage = "<html> <body>  <BR>  <BR>  <Table border=1> <Tr> <td colspan='4' align='center'>  <b>Sales Order </b> </td> </Tr>";
+            //strMessage = strMessage + "<tr>   <td> Customer </td> <td> " + customername + "</td>";
+            //strMessage = strMessage + "<tr>   <td> Number </td> <td> " + SalesOrderNo + "</td> </tr>";
+            //strMessage = strMessage + "<tr>   <td> Address </td> <td> " + address + "</td>";
+            //strMessage = strMessage + "<tr>   <td> Date </td> <td> " + Invoicedate + "</td> </tr>";
+            //strMessage = strMessage + "<tr>    <td colspan='2' align='center'>  <b>Description </b> </td> ";
+            //strMessage = strMessage + "<tr>    <td colspan='2' align='center'>  <b>Quantity </b> </td> </tr> ";
+            //for(int i = 0; i < 3; i++)
+            //{
+            //    strMessage = strMessage + "<tr> <td colspan = '2' align = 'center'> Item" + i.ToString() + "</td>";
+            //    strMessage = strMessage + "<td colspan = '2' align = 'center'> "+ i+10.ToString() + "</td></tr>";
+            //}
+            //strMessage = strMessage + "</Table></body></html>";
+            //emailManager(emailFrom, emailTo, emailSubject, strMessage, "","");
+        }        
+        public void emailManager(string source, string destination, string header, string textdata, string userID, string companyID)
+        {
+            try
+            {
+                string Description = header;
+                MailMessage message = new MailMessage();
+                message.BodyEncoding = System.Text.UTF8Encoding.UTF8;
+                message.IsBodyHtml = true;
+                message.From = new MailAddress("admin@excelfortesoftware.com");
+                message.To.Add(new MailAddress(destination));
+                //for (int iCount = 0; iCount < destination.Length; iCount++)
+                //{
+                //    message.To.Add(new MailAddress(destination[iCount]));
+                //    Description = Description + destination[iCount];
+                //}
+                message.Priority = MailPriority.High;
+                message.Subject = header;
+                message.IsBodyHtml = true;
+                message.Body = textdata;
+                SmtpClient SmtpClient = new SmtpClient();
+                string username = "admin@excelfortesoftware.com";
+                string password = "Admin@Ef1234";
+                SmtpClient.Host = "smtp-relay.gmail.com"; // "smtp.gmail.com"
+                SmtpClient.EnableSsl = true;
+                NetworkCredential cred = new NetworkCredential(username, password);
+                SmtpClient.UseDefaultCredentials = false;
+                SmtpClient.Credentials = cred; // New NetworkCredential(username, password)
+                SmtpClient.Port = 587;
+                SmtpClient.Send(message);
+
+                
+            }
+            catch (Exception eEmail)
+            {
+                string Description = eEmail.Message;
+               // insertActivityLog(userID, "", "", "Email Sent", "D", "Email Sent", Description, companyID);
+            }
+
         }
         public string[] CreateSalesOrderNew(string companyId, ARSalesorderHeader objARSalesOrderHeader, ARSalesorderDetail[] objARSalesOrderDetails)
         {
@@ -561,7 +640,7 @@ namespace EFService
                                                     aRSalesOrder.NetTotal = dr["NetTotal"].ToString();
                                                     aRSalesOrder.TaxAmount = dr["TaxAmount"].ToString();
                                                     aRSalesOrder.GrossTotal = dr["GrossTotal"].ToString();
-                                                    aRSalesOrder.DeliveryDate  = dr["DeliveryDate"].ToString("dd/MM/YYYY");
+                                                    aRSalesOrder.DeliveryDate  = dr["DeliveryDate"].ToString();
                                                     aRSalesOrder.DeliveryPeriod  = dr["DeliveryPeriod"].ToString();
                                                     string remainder= dr["RemainderFlag"].ToString();
                                                     if (remainder=="false")
@@ -671,6 +750,139 @@ namespace EFService
             }
             return objARSalesOrder;
         }
+        public DataTable GetSalesOrderDetailsByInvoicenoForEmail(String companyId, string strInvoiceNo)
+        {
+            DataTable dtSalesOrderValues = new DataTable();
+            //List<ARSalesOrder> objARSalesOrder = new List<ARSalesOrder>();
+            if (!string.IsNullOrEmpty(strInvoiceNo))
+            {
+                String companyDbString = PrivateMethods.GetCompanyDbString(companyId, "Accounts");
+                if (!string.IsNullOrEmpty(companyDbString))
+                {
+                    using (SqlConnection con = new SqlConnection(companyDbString))
+                    {
+                        try
+                        {
+                            using (SqlCommand cmd = new SqlCommand("usp_SalesOrderEmail", con))
+                            {
+                                using (SqlDataAdapter sda = new SqlDataAdapter(cmd))
+                                {
+                                    con.Open();
+                                    cmd.CommandType = CommandType.StoredProcedure;
+                                    cmd.Parameters.Add("@SalesInvoiceno", SqlDbType.NVarChar, 16).Value = strInvoiceNo;
+                                    sda.Fill(dtSalesOrderValues);
+                                 
+                                }
+                            }
+
+                            //Html for Email ...
+
+                            string templatePath = string.Empty;
+                            string emailSubject = string.Empty;
+                            string strMessage = string.Empty;
+                            string StaffName = string.Empty;
+                            string ApprovalOfficerName = string.Empty;
+                            string ProjectName = string.Empty;
+
+
+                            string emailFrom = "admin@excelforte.com";
+                            string emailTo = "sivanandam@gmail.com"; Convert.ToString(dtSalesOrderValues.Rows[0]["email"]);
+                            string CustomerName = Convert.ToString(dtSalesOrderValues.Rows[0]["customername"]); 
+                            string Number = Convert.ToString(dtSalesOrderValues.Rows[0]["invoiceno"]);
+                            string Address = Convert.ToString(dtSalesOrderValues.Rows[0]["Address"]);
+                            string Date = Convert.ToString(dtSalesOrderValues.Rows[0]["Invoicedate"]);
+                            emailSubject = "Sales Order- " + strInvoiceNo + "From Cusomter " +Convert.ToString(dtSalesOrderValues.Rows[0]["customerid"]);
+                            strMessage = "<html xmlns='http://www.w3.org/1999/xhtml'>";
+                            strMessage = strMessage + "<head>";
+                            strMessage = strMessage + "<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />";
+                            strMessage = strMessage + "<title>Sales Order</title>";
+                            strMessage = strMessage + "<link href='https://fonts.googleapis.com/css?family=Roboto:400,300,700,900' rel='stylesheet' type='text/css'>";
+                            strMessage = strMessage + "<style type='text/css'>";
+                            strMessage = strMessage + "body {	font-size: 14px;line-height: 1;background-color: #fff;margin: 30px;padding: 0;-webkit-font-smoothing: antialiased;font-family: 'Roboto', ";
+                            strMessage = strMessage + "Arial, Helvetica, sans-serif;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100%;	}";
+                            strMessage = strMessage + "table {	border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;border-spacing: 0;-webkit-text-size-adjust: 100%;	";
+                            strMessage = strMessage + "-ms-text-size-adjust: 100%;padding: 50px;float: left;}";
+                            strMessage = strMessage + "table tr td {padding-top: 10px;	padding-bottom: 10px;}";
+                            strMessage = strMessage + "</style>";
+                            strMessage = strMessage + "</head>";
+                            strMessage = strMessage + "<body>";
+                            strMessage = strMessage + "<table width='775' border='0'>";
+                            strMessage = strMessage + "<tr bgcolor='f2f2f2' style='width: 100%; font-size:28px; padding:20px 30px 20px 30px; border:1px solid #000;'>";
+                            strMessage = strMessage + " <td colspan='2' height='40' style='padding-left:30px;'><strong>Sales Order</strong></td>";
+                            strMessage = strMessage + "</tr>";
+                            strMessage = strMessage + "<tr bgcolor='ffffff' style='width: 100%; font-size:18px; border:1px solid #000;'>";
+                            strMessage = strMessage + "<td colspan='2' style='padding:0;'>";
+                            strMessage = strMessage + "<table width='100%' border='0'>";
+                            strMessage = strMessage + "<tr>";
+                            strMessage = strMessage + "<td colspan='2' height='100' style='padding-left:30px'>";
+                            strMessage = strMessage + "<table width='100%' border='0'>";
+                            strMessage = strMessage + "<tr>";
+                            strMessage = strMessage + "<td width='25%'>Customer</td>";
+                            strMessage = strMessage + " <td width='5%'>:</td>";
+                            strMessage = strMessage + " <td width='70%'>" + CustomerName + " </td>";
+                            strMessage = strMessage + " </tr>";
+                            strMessage = strMessage + "  <tr> <td>Address</td>   <td>:</td>   <td> " + Address + "</td> </tr>";
+                            strMessage = strMessage + " </table>";
+                            strMessage = strMessage + "</td>";
+                            strMessage = strMessage + "<td colspan='2'><table width='100%' border='0'> <tr> <td width='25%'>Number</td> <td width='5%'>:</td> <td width='70%'>" + Number + "</td> </tr>";
+                            strMessage = strMessage + "<tr>  <td>Date</td>  <td>:</td> <td>"+ Date + "</td> </tr>";
+                            strMessage = strMessage + "</table>";
+                            strMessage = strMessage + " </td>";
+                            strMessage = strMessage + "</tr>";
+                            strMessage = strMessage + "</table>";
+                            strMessage = strMessage + "</td>";
+                            strMessage = strMessage + "</tr>";
+                            strMessage = strMessage + "<tr bgcolor='f2f2f2' style='height:30px; width: 100%; font-size:18px; font-weight:bold; border:1px solid #000;'>";
+                            strMessage = strMessage + "<td width='20' style='padding-left:30px'>Description</td>";
+                            strMessage = strMessage + "<td width='30' style='text-align:right; padding-right:30px;'>Quantity</td>";
+                            strMessage = strMessage + "</tr>";
+
+                            strMessage = strMessage + "<tr bgcolor='ffffff' style='border:1px solid #000;'>";
+                            strMessage = strMessage + "<td colspan='2' height='auto'>";
+                            strMessage = strMessage + "<table width='100%' border='0'>";
+
+                            for (int count=0;count< dtSalesOrderValues.Rows.Count; count++)
+                            {
+                                strMessage = strMessage + "<tr>";
+                                strMessage = strMessage + "<td width='20' style='padding-left:30px'>" + Convert.ToString(dtSalesOrderValues.Rows[count]["description"]) + "</td>";
+                                strMessage = strMessage + "<td width='30' style='text-align:right; padding-right:30px;'>" + Convert.ToString(dtSalesOrderValues.Rows[count]["quantity"]) + "</td>";
+                                strMessage = strMessage + "</tr>";
+                            }
+                           
+
+                            //strMessage = strMessage + "<tr>";
+                            //strMessage = strMessage + "<td width='20' style='padding-left:30px'>abcd efght ijklm</td>";
+                            //strMessage = strMessage + "<td width='30' style='text-align:right; padding-right:30px;'>99.00</td>";
+                            //strMessage = strMessage + "</tr>";
+                            //strMessage = strMessage + " <tr>";
+                            //strMessage = strMessage + "<td width='20' style='padding-left:30px'>abcd efght ijklm</td>";
+                            //strMessage = strMessage + "<td width='30' style='text-align:right; padding-right:30px;'>99.00</td>";
+                            //strMessage = strMessage + "</tr>";
+                            strMessage = strMessage + "</table>";
+                            strMessage = strMessage + "</td>  ";
+                            strMessage = strMessage + "</tr>";
+                            strMessage = strMessage + "</table>";
+                            strMessage = strMessage + "</body>";
+                            strMessage = strMessage + "</html>";
+                            emailManager(emailFrom, emailTo, emailSubject, strMessage, "", "");
+                        }
+                        catch (Exception ex)
+                        {
+                            ARSalesOrder arSalesOrder = new ARSalesOrder();
+                            arSalesOrder.ErrorMsg = ex.Message.ToString();
+                            
+
+                        }
+                        finally
+                        {
+                            if (con.State == ConnectionState.Open)
+                                con.Close();
+                        }
+                    }
+                }
+            }
+            return dtSalesOrderValues;
+        }
         //public string[] authenticateUser(string userID, string password, string companyID)
         //{
         //    password = PrivateMethods.Encrypt(password);
@@ -684,7 +896,7 @@ namespace EFService
         //    {
         //        using (SqlCommand sqlCommand = new SqlCommand("uspAuthenticateUser", con))
         //        {
-                    
+
         //            con.Open();
         //            sqlCommand.CommandType = CommandType.StoredProcedure;
         //            sqlCommand.Parameters.Add("@UserID", SqlDbType.NVarChar, 16).Value = userID;
@@ -694,13 +906,13 @@ namespace EFService
         //            while (reader.Read())
         //            {
         //                result = new string[] { Convert.ToString(reader["Result"]), Convert.ToString(reader["MenuID"]), Convert.ToString(reader["CustomerID"]) };
-                    
+
         //            }
         //            if (reader != null)
         //                ((IDisposable)reader).Dispose();
         //        }
-            
-            
+
+
         //    }
         //    catch (Exception ex)
         //    {
@@ -717,7 +929,7 @@ namespace EFService
         //}
         //    return result;
 
-            
+
         //}
         public List<ARDeliveryAddress>DHGetCustomerDeliveryAddress(string companyID, string customerCode)
         {

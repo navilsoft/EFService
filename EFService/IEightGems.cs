@@ -58,6 +58,14 @@ namespace EFService
         string[] AuthenticateUser8gems(string userID, string password, string companyID);
 
 
+        //[OperationContract]
+        //[WebInvoke(Method = "GET",
+        //  // UriTemplate = "AuthenticateUser",
+        //  RequestFormat = WebMessageFormat.Json,
+        //  ResponseFormat = WebMessageFormat.Json,
+        //  BodyStyle = WebMessageBodyStyle.Wrapped)]
+        //string[] GetEmailTest();
+
         [OperationContract]
         [WebInvoke(Method = "GET",
           // UriTemplate = "AuthenticateUser",
