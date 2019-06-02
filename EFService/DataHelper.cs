@@ -786,7 +786,7 @@ namespace EFService
 
 
                             string emailFrom = "admin@excelforte.com";
-                            string emailTo = "sivanandam@gmail.com"; Convert.ToString(dtSalesOrderValues.Rows[0]["email"]);
+                            string emailTo =  Convert.ToString(dtSalesOrderValues.Rows[0]["email"]);
                             string CustomerName = Convert.ToString(dtSalesOrderValues.Rows[0]["customername"]); 
                             string Number = Convert.ToString(dtSalesOrderValues.Rows[0]["invoiceno"]);
                             string Address = Convert.ToString(dtSalesOrderValues.Rows[0]["Address"]);
