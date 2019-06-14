@@ -788,8 +788,10 @@ namespace EFService
                             string emailFrom = "admin@excelforte.com";
                             string emailTo =  Convert.ToString(dtSalesOrderValues.Rows[0]["email"]);
                             string CustomerName = Convert.ToString(dtSalesOrderValues.Rows[0]["customername"]); 
-                            string Number = Convert.ToString(dtSalesOrderValues.Rows[0]["invoiceno"]);
+                            string Number = Convert.ToString(dtSalesOrderValues.Rows[0]["invoiceno"]);                        
+
                             string Address = Convert.ToString(dtSalesOrderValues.Rows[0]["Address"]);
+
                             string Date = Convert.ToString(dtSalesOrderValues.Rows[0]["Invoicedate"]);
                             emailSubject = "Sales Order- " + strInvoiceNo + "  From Customer " + CustomerName; //Convert.ToString(dtSalesOrderValues.Rows[0]["customerid"]);
                             strMessage = "<html xmlns='http://www.w3.org/1999/xhtml'>";
