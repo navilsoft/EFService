@@ -791,7 +791,7 @@ namespace EFService
                             string Number = Convert.ToString(dtSalesOrderValues.Rows[0]["invoiceno"]);
                             string Address = Convert.ToString(dtSalesOrderValues.Rows[0]["Address"]);
                             string Date = Convert.ToString(dtSalesOrderValues.Rows[0]["Invoicedate"]);
-                            emailSubject = "Sales Order- " + strInvoiceNo + "From Cusomter " +Convert.ToString(dtSalesOrderValues.Rows[0]["customerid"]);
+                            emailSubject = "Sales Order- " + strInvoiceNo + "  From Customer " + CustomerName; //Convert.ToString(dtSalesOrderValues.Rows[0]["customerid"]);
                             strMessage = "<html xmlns='http://www.w3.org/1999/xhtml'>";
                             strMessage = strMessage + "<head>";
                             strMessage = strMessage + "<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />";
